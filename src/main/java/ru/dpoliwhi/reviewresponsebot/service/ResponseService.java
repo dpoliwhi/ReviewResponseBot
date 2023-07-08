@@ -13,17 +13,11 @@ import ru.dpoliwhi.reviewresponsebot.model.request.enums.InteractionStatus;
 import ru.dpoliwhi.reviewresponsebot.model.response.ReviewResponse;
 import ru.dpoliwhi.reviewresponsebot.utils.JsonUtils;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class ResponseService {
-
-    @Autowired
-    private JsonUtils jsonUtils;
-
     private static final String OZON_REVIEWS_URL = "https://seller.ozon.ru/api/v3/review/list";
 
     public ReviewResponse getReviews() {
