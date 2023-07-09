@@ -3,10 +3,7 @@ package ru.dpoliwhi.reviewresponsebot.utils.httputils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.ws.rs.core.Response;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
+import org.apache.http.*;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -227,7 +224,7 @@ public class RestUtils {
 
         int statusCode = response.getStatusCode();
         if (statusCode != Response.Status.OK.getStatusCode()) {
-            Map<String, String> messageMap = jsonUtils.fromJson(content, new TypeReference<>() {
+            Map<String, String> messageMap = jsonUtils.fromJson(content, new TypeReference<Map<String, String>>() {
             });
             String errorMessage = messageMap.get("message");
             if (StringUtils.isNotBlank(errorMessage)) {
