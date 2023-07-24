@@ -22,7 +22,7 @@ public class PageFilter {
     private Boolean withCounters;
 
     @JsonProperty("pagination_last_timestamp")
-    private Date lastTimeStamp;
+    private Long lastTimeStamp;
 
     @JsonProperty("pagination_last_uuid")
     private String lastUUID;

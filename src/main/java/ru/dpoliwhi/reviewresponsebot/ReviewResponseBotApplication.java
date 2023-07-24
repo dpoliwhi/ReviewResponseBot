@@ -11,22 +11,24 @@ import ru.dpoliwhi.reviewresponsebot.model.request.enums.InteractionStatus;
 import ru.dpoliwhi.reviewresponsebot.model.request.enums.SortBy;
 import ru.dpoliwhi.reviewresponsebot.model.request.enums.SortDirection;
 import ru.dpoliwhi.reviewresponsebot.service.ReviewService;
-import ru.dpoliwhi.reviewresponsebot.utils.JsonUtils;
+import ru.dpoliwhi.reviewresponsebot.service.ReviewStorage;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @SpringBootApplication
 public class ReviewResponseBotApplication implements CommandLineRunner {
 
     private final ReviewService reviewService;
-    private final JsonUtils jsonUtils;
 
-    public ReviewResponseBotApplication(ReviewService reviewService, JsonUtils jsonUtils) {
+    private final ReviewStorage reviewStorage;
+
+    public ReviewResponseBotApplication(ReviewService reviewService, ReviewStorage reviewStorage) {
         this.reviewService = reviewService;
-        this.jsonUtils = jsonUtils;
+        this.reviewStorage = reviewStorage;
     }
 
     public static void main(String[] args) {
@@ -39,21 +41,26 @@ public class ReviewResponseBotApplication implements CommandLineRunner {
         PageFilter pageFilter = new PageFilter();
         Filter filter = new Filter();
         List<InteractionStatus> interactionStatuses = new ArrayList<>();
-        interactionStatuses.add(InteractionStatus.PROCESSED);
+        interactionStatuses.add(InteractionStatus.ALL);
         filter.setInteractionStatuses(interactionStatuses);
         pageFilter.setFilter(filter);
 
         Sort sort = new Sort(SortBy.PUBLISHED_AT, SortDirection.DESC);
         pageFilter.setSort(sort);
 
-        pageFilter.setCompanyId("382276");
+//        pageFilter.setCompanyId("382276");
+        pageFilter.setCompanyId("1213833");
         pageFilter.setCompanyType("seller");
         pageFilter.setWithCounters(false);
-        pageFilter.setLastTimeStamp(new Date(0L));
+        pageFilter.setLastTimeStamp(new Date(0L).getTime());
         pageFilter.setLastUUID(null);
 
-        String token = "__Secure-ab-group=85; __Secure-ext_xcid=e1a085422aa690220db7feeaa007c409; __Secure-user-id=70187620; bacntid=925310; contentId=382276; __cf_bm=iAP0eHO9ekDmFDcjrhXryrj3RmePAywJlGrSt3.FR1U-1688920150-0-AcqDn3oBzckBiVwI6zFcdngdibxfc6y67msiXxPBeROzYlFZRpwGbH3Sf0QxFBfqUKkescmc0Dtc8fkjQxhEZtjpCHsZ8u4xv0WFik5shoOB; __Secure-access-token=3.70187620.1mXdI0UCTqWtg_iaPakq8A.85.l8cMBQAAAABkquBWAAAAAKN3ZWKrNzkwNjkzODk5NjkAgJCg.20210628064922.20230709182910.aIBCgTG5_NeDrfEpUzA9ZT7D5o_ASrc-r3fQ449OyC4; __Secure-refresh-token=3.70187620.1mXdI0UCTqWtg_iaPakq8A.85.l8cMBQAAAABkquBWAAAAAKN3ZWKrNzkwNjkzODk5NjkAgJCg.20210628064922.20230709182910.evjS3c1H2liKT6gbdMUZNc8uIo0XqpLYvhkNovbX4a0; x-o3-language=ru";
-
+        String token = "__Secure-ab-group=85; __Secure-ext_xcid=e1a085422aa690220db7feeaa007c409; __Secure-user-id=70187620; x-o3-language=ru; __cf_bm=HKn3JEU0pvXz6MWkPZHHH2rQk4.IUNHvgF_awTRoQ4k-1690214542-0-AZY/Y/3RFdIbS0T+bJtddftIGQwvaGct+0k2daLHyGRpa8gnouy31Q0tTQ6hfEJkXjouQzPdsDMAE8q7IHBvdIg=; cf_clearance=Vp8hd5svizrjadF3halM6bPJPKtYtGgn3idiuMpyGYI-1690214544-0-0.2.1690214544; __Secure-access-token=3.70187620.1mXdI0UCTqWtg_iaPakq8A.85.l8cMBQAAAABkvqCQAAAAAKN3ZWKrNzkwNjkzODk5NjkAgJCg.20210628064922.20230724180224.z67FWQK8KOwq1ktIQ6BlCn4e6C1nm7bGdXlOJnDW8Ug; __Secure-refresh-token=3.70187620.1mXdI0UCTqWtg_iaPakq8A.85.l8cMBQAAAABkvqCQAAAAAKN3ZWKrNzkwNjkzODk5NjkAgJCg.20210628064922.20230724180224.jYxDnuMLj9EdLR3F8X0a1R_o-0UFWw05Mq1a_AQXasU; bacntid=2726135; contentId=1213833";
         reviewService.getReviews(pageFilter, token);
+
+        log.error("REVIEW AMOUNT IN STORAGE: " + reviewStorage.getReviews().size());
+
+        Map<Integer, Integer> ratings = reviewStorage.getRatings();
+        ratings.forEach((key, value) -> log.atInfo().log(String.format("RATING %d: %d", key, value)));
     }
 }

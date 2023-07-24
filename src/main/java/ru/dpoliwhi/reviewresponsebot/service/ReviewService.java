@@ -2,10 +2,9 @@ package ru.dpoliwhi.reviewresponsebot.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicHeader;
 import org.springframework.stereotype.Service;
 import ru.dpoliwhi.reviewresponsebot.exceptions.ExternalServiceRequestError;
@@ -21,36 +20,49 @@ import java.util.List;
 @Slf4j
 @Service
 public class ReviewService {
+
     private static final String OZON_REVIEWS_URL = "https://seller.ozon.ru/api/v3/review/list";
 
     private final RestUtils restUtils;
+
     private final JsonUtils jsonUtils;
 
-    public ReviewService(RestUtils restUtils, JsonUtils jsonUtils) {
+    private final ReviewStorage reviewStorage;
+
+    public ReviewService(RestUtils restUtils, JsonUtils jsonUtils, ReviewStorage reviewStorage) {
         this.restUtils = restUtils;
         this.jsonUtils = jsonUtils;
+        this.reviewStorage = reviewStorage;
     }
 
-    public ReviewResponse getReviews(PageFilter filter, String token) {
-        HttpClient httpClient = HttpClientBuilder.create().build();
-
+    public void getReviews(PageFilter filter, String token) {
         URIBuilder uriBuilder = restUtils.getURIBuilder(OZON_REVIEWS_URL);
-
-        String pageFilterJson = jsonUtils.toJson(filter);
-        log.atInfo().log("PageFilter: {}", pageFilterJson);
+        List<Header> headers = getAuthHeader(token);
 
         ReviewResponse reviews = null;
-        try {
-            HttpResult response = restUtils.postRequest(uriBuilder, pageFilterJson, getAuthHeader(token));
-            int status = response.getStatusCode(); //TODO обработать статус 403 401, прокинуть ошибку выше на запрос нового токена
-            String body = response.getBody();
-            reviews = restUtils.mapResponse(response, new TypeReference<ReviewResponse>() {});
-        } catch (ExternalServiceRequestError e) {
-            log.warn("OZON server is unavailable");
-            log.error(e.getMessage(), e);
-        }
+        filter.setLastUUID("");
 
-        return reviews;
+        while (true) {
+            String pageFilterJson = jsonUtils.toJson(filter);
+
+            try {
+                HttpResult response = restUtils.postRequest(uriBuilder, pageFilterJson, getAuthHeader(token));
+                int status = response.getStatusCode(); //TODO обработать статус 403 401, прокинуть ошибку выше на запрос нового токена
+                reviews = restUtils.mapResponse(response, new TypeReference<ReviewResponse>() {});
+
+                reviewStorage.addReviews(reviews.getResult());
+
+                if (StringUtils.isBlank(reviews.getLastUUID())) {
+                    break;
+                }
+
+                filter.setLastTimeStamp(reviews.getLastTimeStamp());
+                filter.setLastUUID(reviews.getLastUUID());
+            } catch (ExternalServiceRequestError e) {
+                log.warn("OZON server is unavailable");
+                log.error(e.getMessage(), e);
+            }
+        }
     }
 
 
