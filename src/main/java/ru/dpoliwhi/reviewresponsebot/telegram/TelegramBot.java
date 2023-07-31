@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.dpoliwhi.reviewresponsebot.config.BotConfig;
 import ru.dpoliwhi.reviewresponsebot.model.request.PageFilter;
+import ru.dpoliwhi.reviewresponsebot.registration.AuthInfo;
 import ru.dpoliwhi.reviewresponsebot.service.ReviewService;
 
 import java.util.HashMap;
@@ -21,7 +22,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final String GET_COMPANY_ID_MESSAGE = "Введи id компании";
     private final String GET_TOKEN_MESSAGE = "Введи токен";
 
-    private Map<RegistrationSlots, String> registrationData = new HashMap<>();
+    private AuthInfo authInfo;
 
     private boolean isStarted = false;
 
@@ -30,9 +31,10 @@ public class TelegramBot extends TelegramLongPollingBot {
     private ReviewService reviewService;
 
     @Autowired
-    public TelegramBot(BotConfig botConfig, ReviewService reviewService) {
+    public TelegramBot(BotConfig botConfig, ReviewService reviewService, AuthInfo authInfo) {
         this.botConfig = botConfig;
         this.reviewService = reviewService;
+        this.authInfo = authInfo;
     }
 
     @Override
@@ -73,18 +75,23 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (!isStarted && !messageText.equals("/start")) {
                 sendMessage(chatId, "Присылай команду /start");
             } else if (messageText.equals("/start")) {
-                registrationData.clear();
+                authInfo.clearAuthInfo();
                 isStarted = true;
                 startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
                 sendMessage(chatId, GET_COMPANY_ID_MESSAGE);
-            } else if (registrationData.isEmpty()) {
-                registrationData.put(RegistrationSlots.COMPANY_ID, messageText);
+            } else if (authInfo.isEmpty()) {
+                authInfo.setSellerId(messageText);
                 sendMessage(chatId, GET_TOKEN_MESSAGE);
-            } else if (registrationData.containsKey(RegistrationSlots.COMPANY_ID) && !registrationData.containsKey(RegistrationSlots.TOKEN)) {
-                registrationData.put(RegistrationSlots.TOKEN, messageText);
+
+//                authInfo.requestToken();
+            }
+            else if (authInfo.getSellerId() != null && authInfo.getToken() == null) {
+                authInfo.setToken(messageText);
                 sendMessage(chatId, "Твои данные получены, давай начинать!");
-                log.atInfo().log("company_ID: " + registrationData.get(RegistrationSlots.COMPANY_ID));
-                log.atInfo().log("TOKEN: " + registrationData.get(RegistrationSlots.TOKEN));
+
+                log.atInfo().log("company_ID: " + authInfo.getSellerId());
+                log.atInfo().log("TOKEN: " + authInfo.getToken());
+
                 sendMessage(chatId, "Получаем твои отзывы...");
                 getReviews(chatId);
             } else {
@@ -94,10 +101,12 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void getReviews(long chatId) {
-        PageFilter pageFilter = reviewService.getFilter(registrationData.get(RegistrationSlots.COMPANY_ID));
-        reviewService.getReviews(pageFilter, registrationData.get(RegistrationSlots.TOKEN));
+        PageFilter pageFilter = reviewService.getFilter(authInfo.getSellerId());
+        reviewService.getReviews(pageFilter, authInfo.getToken());
+
         int countOfReviews = reviewService.getCountOfReviews();
         sendMessage(chatId, "Получено " + countOfReviews + " отзывов");
+
         Map<Integer, Integer> ratings = reviewService.getRatings();
         StringBuilder ratingsString = new StringBuilder();
         ratings.forEach((key, value) -> ratingsString.append(String.format("RATING %d: %d%n", key, value)));
