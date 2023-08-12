@@ -42,11 +42,11 @@ public class ReviewService {
         this.reviewStorage = reviewStorage;
     }
 
-    public PageFilter getFilter(String companyId) {
+    public PageFilter getFilter(String companyId, InteractionStatus facet) {
         PageFilter pageFilter = new PageFilter();
         Filter filter = new Filter();
         List<InteractionStatus> interactionStatuses = new ArrayList<>();
-        interactionStatuses.add(InteractionStatus.ALL);
+        interactionStatuses.add(facet);
         filter.setInteractionStatuses(interactionStatuses);
         pageFilter.setFilter(filter);
 

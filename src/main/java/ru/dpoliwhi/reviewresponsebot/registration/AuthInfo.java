@@ -1,19 +1,11 @@
 package ru.dpoliwhi.reviewresponsebot.registration;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.Header;
-import org.apache.http.client.utils.URIBuilder;
 import org.springframework.stereotype.Component;
-import ru.dpoliwhi.reviewresponsebot.exceptions.ExternalServiceRequestError;
 import ru.dpoliwhi.reviewresponsebot.utils.JsonUtils;
-import ru.dpoliwhi.reviewresponsebot.utils.httputils.HttpResult;
 import ru.dpoliwhi.reviewresponsebot.utils.httputils.RestUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @Log4j2
