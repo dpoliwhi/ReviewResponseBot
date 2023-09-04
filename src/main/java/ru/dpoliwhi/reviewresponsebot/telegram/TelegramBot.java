@@ -24,14 +24,15 @@ import java.util.Map;
 public class TelegramBot extends TelegramLongPollingBot {
 
     private final String GET_COMPANY_ID_MESSAGE = "Введи id компании";
+
     private final String GET_TOKEN_MESSAGE = "Введи токен";
-    private final String NEW_REVIEWS = "new";
-    private final String VIEWED_REVIEWS = "viewed";
 
     private AuthInfo authInfo;
 
     private boolean isStarted = false;
+
     private boolean isRegistered = false;
+
     private boolean isReviewsReceived = false;
 
     private final BotConfig botConfig;
@@ -106,11 +107,14 @@ public class TelegramBot extends TelegramLongPollingBot {
                     isStarted = false;
                     isRegistered = false;
                     onUpdateReceived(update);
-//                    startBot(update);
                 }
             }
         } else if (update.hasCallbackQuery()) {
-            getReviews(update);
+            String callbackData = update.getCallbackQuery().getData();
+            long chatId = update.getCallbackQuery().getMessage().getChatId();
+
+            getReviews(callbackData, chatId);
+            startToProceedOrRepeatFacets(callbackData, chatId);
         }
     }
 
@@ -139,39 +143,30 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
-    private void getReviews(Update update) {
-        String callbackData = update.getCallbackQuery().getData();
-        long chatId = update.getCallbackQuery().getMessage().getChatId();
-
-        if (callbackData.equals(NEW_REVIEWS)) {
+    private void getReviews(String callbackData, Long chatId) {
+        if (callbackData.equals(ButtonUtils.NEW_REVIEWS)) {
             getReviewsFromOzon(chatId, InteractionStatus.NOT_VIEWED);
-        } else if (callbackData.equals(VIEWED_REVIEWS)) {
+            chooseStartOrRepeat(chatId);
+        } else if (callbackData.equals(ButtonUtils.VIEWED_REVIEWS)) {
             getReviewsFromOzon(chatId, InteractionStatus.VIEWED);
+            chooseStartOrRepeat(chatId);
+        }
+    }
+
+    private void startToProceedOrRepeatFacets(String callbackData, Long chatId) {
+        if (callbackData.equals(ButtonUtils.PROCESS_REVIEWS)) {
+
+        } else if (callbackData.equals(ButtonUtils.REPEAT_FACETS)) {
+            chooseReviewsFacet(chatId);
         }
     }
 
     private void chooseReviewsFacet(Long chatId) {
-        InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
+        createAndSendMessage(chatId, "Какие отзывы ты хочешь получить?", ButtonUtils.getReviewFacetButtons());
+    }
 
-        List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-        List<InlineKeyboardButton> rowInline = new ArrayList<>();
-
-        InlineKeyboardButton button1 = new InlineKeyboardButton();
-        button1.setText("Новые");
-        button1.setCallbackData(NEW_REVIEWS);
-
-        InlineKeyboardButton button2 = new InlineKeyboardButton();
-        button2.setText("Просмотренные");
-        button2.setCallbackData(VIEWED_REVIEWS);
-
-        rowInline.add(button1);
-        rowInline.add(button2);
-
-        rowsInline.add(rowInline);
-
-        markupInline.setKeyboard(rowsInline);
-
-        createAndSendMessage(chatId, "Какие отзывы ты хочешь получить?", markupInline);
+    private void chooseStartOrRepeat(Long chatId) {
+        createAndSendMessage(chatId, "Отвечаем на отзывы?", ButtonUtils.getStartButtonOrRepeatFacets());
     }
 
     private void getReviewsFromOzon(long chatId, InteractionStatus facet) {
