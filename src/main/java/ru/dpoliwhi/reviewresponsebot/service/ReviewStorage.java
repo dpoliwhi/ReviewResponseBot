@@ -23,13 +23,18 @@ public class ReviewStorage {
         reviews = new ArrayList<>();
 
         ratings = new HashMap<>();
+        fillRatingsMap();
+
+        negativeReviews = new ArrayList<>();
+    }
+
+    public void fillRatingsMap() {
+        ratings.clear();
         ratings.put(5, 0);
         ratings.put(4, 0);
         ratings.put(3, 0);
         ratings.put(2, 0);
         ratings.put(1, 0);
-
-        negativeReviews = new ArrayList<>();
     }
 
     public void addReviews(List<Review> reviews) {

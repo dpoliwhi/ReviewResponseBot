@@ -53,7 +53,6 @@ public class ReviewService {
         Sort sort = new Sort(SortBy.PUBLISHED_AT, SortDirection.DESC);
         pageFilter.setSort(sort);
 
-//        pageFilter.setCompanyId("382276");
         pageFilter.setCompanyId(companyId);
         pageFilter.setCompanyType("seller");
         pageFilter.setWithCounters(false);
@@ -101,6 +100,11 @@ public class ReviewService {
 
     public int getCountOfReviews() {
         return reviewStorage.getReviews().size();
+    }
+
+    public void clearReviewStorage() {
+        reviewStorage.getReviews().clear();
+        reviewStorage.fillRatingsMap();
     }
 
     public Map<Integer, Integer> getRatings() {

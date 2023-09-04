@@ -16,7 +16,6 @@ import ru.dpoliwhi.reviewresponsebot.registration.AuthInfo;
 import ru.dpoliwhi.reviewresponsebot.service.ReviewService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -86,7 +85,6 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
 
-
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
@@ -102,12 +100,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             } else {
                 if (!isRegistered) {
                     registration(chatId, messageText);
-                } else {
-                    if (!isReviewsReceived) {
-                        getReviews(update);
-                    }
                 }
-
 
                 if (messageText.equals("/start")) {
                     isStarted = false;
@@ -116,34 +109,8 @@ public class TelegramBot extends TelegramLongPollingBot {
 //                    startBot(update);
                 }
             }
-
-
-
-//            if (!isStarted && !messageText.equals("/start")) {
-//                createAndSendMessage(chatId, "Присылай команду /start");
-//            } else if (messageText.equals("/start")) {
-//                authInfo.clearAuthInfo();
-//                isStarted = true;
-//                startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
-//                createAndSendMessage(chatId, GET_COMPANY_ID_MESSAGE);
-//            } else if (authInfo.isEmpty()) {
-//                authInfo.setSellerId(messageText);
-//                createAndSendMessage(chatId, GET_TOKEN_MESSAGE);
-//
-////                authInfo.requestToken();
-//            } else if (authInfo.getSellerId() != null && authInfo.getToken() == null) {
-//                authInfo.setToken(messageText);
-//                createAndSendMessage(chatId, "Твои данные получены, давай начинать!");
-//
-//                log.atInfo().log("company_ID: " + authInfo.getSellerId());
-//                log.atInfo().log("TOKEN: " + authInfo.getToken());
-//
-//                chooseReviewsFacet(chatId);
-////                createAndSendMessage(chatId, "Получаем твои отзывы...");
-////                getReviews(chatId);
-//            } else {
-//                createAndSendMessage(chatId, "Ты уже зарегистрировался");
-//            }
+        } else if (update.hasCallbackQuery()) {
+            getReviews(update);
         }
     }
 
@@ -167,22 +134,19 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             log.atInfo().log("company_ID: " + authInfo.getSellerId());
             log.atInfo().log("TOKEN: " + authInfo.getToken());
+
+            chooseReviewsFacet(chatId);
         }
     }
 
     private void getReviews(Update update) {
-        if (!update.hasCallbackQuery()) {
-            chooseReviewsFacet(update.getMessage().getChatId());
-        } else {
-            String callbackData = update.getCallbackQuery().getData();
-            long chatId = update.getCallbackQuery().getMessage().getChatId();
-            long messageId = update.getCallbackQuery().getMessage().getMessageId();
+        String callbackData = update.getCallbackQuery().getData();
+        long chatId = update.getCallbackQuery().getMessage().getChatId();
 
-            if (callbackData.equals(NEW_REVIEWS)) {
-                getReviewsFromOzon(chatId, InteractionStatus.NOT_VIEWED);
-            } else if (callbackData.equals(VIEWED_REVIEWS)) {
-                getReviewsFromOzon(chatId, InteractionStatus.VIEWED);
-            }
+        if (callbackData.equals(NEW_REVIEWS)) {
+            getReviewsFromOzon(chatId, InteractionStatus.NOT_VIEWED);
+        } else if (callbackData.equals(VIEWED_REVIEWS)) {
+            getReviewsFromOzon(chatId, InteractionStatus.VIEWED);
         }
     }
 
@@ -211,6 +175,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void getReviewsFromOzon(long chatId, InteractionStatus facet) {
+        reviewService.clearReviewStorage();
         PageFilter pageFilter = reviewService.getFilter(authInfo.getSellerId(), facet);
         reviewService.getReviews(pageFilter, authInfo.getToken());
 
