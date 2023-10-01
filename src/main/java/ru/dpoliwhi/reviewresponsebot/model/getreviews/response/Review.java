@@ -1,8 +1,8 @@
-package ru.dpoliwhi.reviewresponsebot.model.response;
+package ru.dpoliwhi.reviewresponsebot.model.getreviews.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import ru.dpoliwhi.reviewresponsebot.model.request.enums.InteractionStatus;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.request.enums.InteractionStatus;
 
 import java.util.Date;
 

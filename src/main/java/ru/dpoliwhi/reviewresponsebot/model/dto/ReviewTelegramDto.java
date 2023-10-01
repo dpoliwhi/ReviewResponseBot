@@ -1,8 +1,8 @@
 package ru.dpoliwhi.reviewresponsebot.model.dto;
 
 import lombok.Data;
-import ru.dpoliwhi.reviewresponsebot.model.response.Review;
-import ru.dpoliwhi.reviewresponsebot.model.response.ReviewText;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.response.Review;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.response.ReviewText;
 
 @Data
 public class ReviewTelegramDto {

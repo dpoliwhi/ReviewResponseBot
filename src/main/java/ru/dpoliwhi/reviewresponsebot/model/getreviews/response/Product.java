@@ -1,4 +1,4 @@
-package ru.dpoliwhi.reviewresponsebot.model.response;
+package ru.dpoliwhi.reviewresponsebot.model.getreviews.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

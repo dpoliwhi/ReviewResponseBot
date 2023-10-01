@@ -1,4 +1,4 @@
-package ru.dpoliwhi.reviewresponsebot.model.request.enums;
+package ru.dpoliwhi.reviewresponsebot.model.getreviews.request.enums;
 
 public enum InteractionStatus {
     ALL,

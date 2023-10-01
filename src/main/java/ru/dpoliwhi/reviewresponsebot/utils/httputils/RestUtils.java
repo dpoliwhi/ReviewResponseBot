@@ -15,6 +15,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import ru.dpoliwhi.reviewresponsebot.exceptions.ExternalServiceRequestError;
@@ -33,6 +34,7 @@ public class RestUtils {
 
     private final JsonUtils jsonUtils;
 
+    @Autowired
     public RestUtils(HttpFactory httpFactory, JsonUtils jsonUtils) {
         this.httpFactory = httpFactory;
         this.jsonUtils = jsonUtils;
@@ -234,5 +236,11 @@ public class RestUtils {
         }
 
         return content;
+    }
+
+    public List<Header> getAuthHeader(String token) {
+        List<Header> result = new ArrayList<>();
+        result.add(new BasicHeader("Cookie", token));
+        return result;
     }
 }

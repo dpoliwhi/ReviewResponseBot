@@ -2,8 +2,9 @@ package ru.dpoliwhi.reviewresponsebot.service;
 
 import lombok.Data;
 import org.springframework.stereotype.Service;
+import ru.dpoliwhi.reviewresponsebot.model.dto.ReviewInfoToResponse;
 import ru.dpoliwhi.reviewresponsebot.model.dto.ReviewTelegramDto;
-import ru.dpoliwhi.reviewresponsebot.model.response.Review;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.response.Review;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,8 +17,11 @@ public class ReviewStorage {
 
     private List<Review> reviews;
 
-    Map<Integer, Integer> ratings;
+    private Map<Integer, Integer> ratings;
+
     private List<ReviewTelegramDto> negativeReviews;
+
+    private List<ReviewInfoToResponse> reviewInfos;
 
     public ReviewStorage() {
         reviews = new ArrayList<>();
@@ -26,6 +30,8 @@ public class ReviewStorage {
         fillRatingsMap();
 
         negativeReviews = new ArrayList<>();
+
+        reviewInfos = new ArrayList<>();
     }
 
     public void fillRatingsMap() {
@@ -44,6 +50,8 @@ public class ReviewStorage {
             ratings.put(rating, ratings.get(review.getRating()) + 1);
             if (rating <= 3) {
                 negativeReviews.add(new ReviewTelegramDto(review));
+            } else {
+                reviewInfos.add(new ReviewInfoToResponse(review.getUuid(), review.getAuthorName()));
             }
         }
     }

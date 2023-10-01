@@ -5,16 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.message.BasicHeader;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.dpoliwhi.reviewresponsebot.exceptions.ExternalServiceRequestError;
-import ru.dpoliwhi.reviewresponsebot.model.request.Filter;
-import ru.dpoliwhi.reviewresponsebot.model.request.PageFilter;
-import ru.dpoliwhi.reviewresponsebot.model.request.Sort;
-import ru.dpoliwhi.reviewresponsebot.model.request.enums.InteractionStatus;
-import ru.dpoliwhi.reviewresponsebot.model.request.enums.SortBy;
-import ru.dpoliwhi.reviewresponsebot.model.request.enums.SortDirection;
-import ru.dpoliwhi.reviewresponsebot.model.response.ReviewResponse;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.request.Filter;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.request.PageFilter;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.request.Sort;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.request.enums.InteractionStatus;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.request.enums.SortBy;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.request.enums.SortDirection;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.response.ReviewResponse;
 import ru.dpoliwhi.reviewresponsebot.utils.JsonUtils;
 import ru.dpoliwhi.reviewresponsebot.utils.httputils.HttpResult;
 import ru.dpoliwhi.reviewresponsebot.utils.httputils.RestUtils;
@@ -36,6 +36,7 @@ public class ReviewService {
 
     private final ReviewStorage reviewStorage;
 
+    @Autowired
     public ReviewService(RestUtils restUtils, JsonUtils jsonUtils, ReviewStorage reviewStorage) {
         this.restUtils = restUtils;
         this.jsonUtils = jsonUtils;
@@ -64,7 +65,7 @@ public class ReviewService {
 
     public void getReviews(PageFilter filter, String token) {
         URIBuilder uriBuilder = restUtils.getURIBuilder(OZON_REVIEWS_URL);
-        List<Header> headers = getAuthHeader(token);
+        List<Header> headers = restUtils.getAuthHeader(token);
 
         ReviewResponse reviews = null;
         filter.setLastUUID("");
@@ -75,7 +76,8 @@ public class ReviewService {
             try {
                 HttpResult response = restUtils.postRequest(uriBuilder, pageFilterJson, headers);
                 int status = response.getStatusCode(); //TODO обработать статус 403 401, прокинуть ошибку выше на запрос нового токена
-                reviews = restUtils.mapResponse(response, new TypeReference<ReviewResponse>() {});
+                reviews = restUtils.mapResponse(response, new TypeReference<ReviewResponse>() {
+                });
 
                 reviewStorage.addReviews(reviews.getResult());
 
@@ -90,12 +92,6 @@ public class ReviewService {
                 log.error(e.getMessage(), e);
             }
         }
-    }
-
-    private List<Header> getAuthHeader(String token) {
-        List<Header> result = new ArrayList<>();
-        result.add(new BasicHeader("Cookie", token));
-        return result;
     }
 
     public int getCountOfReviews() {

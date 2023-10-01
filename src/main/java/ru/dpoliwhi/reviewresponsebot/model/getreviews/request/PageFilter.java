@@ -1,9 +1,7 @@
-package ru.dpoliwhi.reviewresponsebot.model.request;
+package ru.dpoliwhi.reviewresponsebot.model.getreviews.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-
-import java.util.Date;
 
 @Data
 public class PageFilter {

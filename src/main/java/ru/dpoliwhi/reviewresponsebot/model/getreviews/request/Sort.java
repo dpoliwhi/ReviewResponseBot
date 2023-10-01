@@ -1,10 +1,10 @@
-package ru.dpoliwhi.reviewresponsebot.model.request;
+package ru.dpoliwhi.reviewresponsebot.model.getreviews.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import ru.dpoliwhi.reviewresponsebot.model.request.enums.SortBy;
-import ru.dpoliwhi.reviewresponsebot.model.request.enums.SortDirection;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.request.enums.SortBy;
+import ru.dpoliwhi.reviewresponsebot.model.getreviews.request.enums.SortDirection;
 
 @Data
 @AllArgsConstructor
