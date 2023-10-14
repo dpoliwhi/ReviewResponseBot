@@ -9,6 +9,7 @@ import ru.dpoliwhi.reviewresponsebot.model.dto.ReviewInfoToResponse;
 import ru.dpoliwhi.reviewresponsebot.utils.JsonUtils;
 import ru.dpoliwhi.reviewresponsebot.utils.httputils.RestUtils;
 
+import java.util.Formatter;
 import java.util.List;
 
 @Slf4j
@@ -23,11 +24,14 @@ public class ResponseService {
 
     private final ReviewStorage reviewStorage;
 
+    private final ResponseStorage responseStorage;
+
     @Autowired
-    public ResponseService(RestUtils restUtils, JsonUtils jsonUtils, ReviewStorage reviewStorage) {
+    public ResponseService(RestUtils restUtils, JsonUtils jsonUtils, ReviewStorage reviewStorage, ResponseStorage responseStorage) {
         this.restUtils = restUtils;
         this.jsonUtils = jsonUtils;
         this.reviewStorage = reviewStorage;
+        this.responseStorage = responseStorage;
     }
 
     public void sendResponses(String token) {
@@ -35,6 +39,15 @@ public class ResponseService {
         List<Header> headers = restUtils.getAuthHeader(token);
 
         List<ReviewInfoToResponse> reviewInfos = reviewStorage.getReviewInfos();
+
+        Formatter formatter = new Formatter();
+        for (ReviewInfoToResponse reviewInfo : reviewInfos) {
+            String reviewText = responseStorage.getRandomResponse();
+            formatter.format(reviewText, reviewInfo.getAuthorName());
+
+            log.warn(formatter.toString());
+        }
+
 //        for (ReviewInfoToResponse reviewInfo : reviewInfos) {
 //            HttpResult response = restUtils.postRequest(uriBuilder, pageFilterJson, headers);
 //

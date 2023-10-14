@@ -12,6 +12,8 @@ import ru.dpoliwhi.reviewresponsebot.config.BotConfig;
 import ru.dpoliwhi.reviewresponsebot.model.getreviews.request.PageFilter;
 import ru.dpoliwhi.reviewresponsebot.model.getreviews.request.enums.InteractionStatus;
 import ru.dpoliwhi.reviewresponsebot.registration.AuthInfo;
+import ru.dpoliwhi.reviewresponsebot.service.AdminService;
+import ru.dpoliwhi.reviewresponsebot.service.ResponseService;
 import ru.dpoliwhi.reviewresponsebot.service.ReviewService;
 
 import java.util.Map;
@@ -30,17 +32,25 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private boolean isRegistered = false;
 
+    private boolean isAdmin = false;
+
     private boolean isReviewsReceived = false;
 
     private final BotConfig botConfig;
 
     private ReviewService reviewService;
 
+    private ResponseService responseService;
+
+    private AdminService adminService;
+
     @Autowired
-    public TelegramBot(BotConfig botConfig, ReviewService reviewService, AuthInfo authInfo) {
+    public TelegramBot(BotConfig botConfig, ReviewService reviewService, AuthInfo authInfo, AdminService adminService, ResponseService responseService) {
         this.botConfig = botConfig;
         this.reviewService = reviewService;
         this.authInfo = authInfo;
+        this.adminService = adminService;
+        this.responseService = responseService;
     }
 
     @Override
@@ -89,10 +99,31 @@ public class TelegramBot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
+            if (messageText.equals("/start")) {
+                isAdmin = false;
+                isStarted = false;
+                isRegistered = false;
+            }
+
+            if (messageText.equals("/admin")) {
+                isAdmin = true;
+                isStarted = false;
+                isRegistered = false;
+                createAndSendMessage(chatId, "Введи пароль учетки администратора");
+                return;
+            }
+
+            if (isAdmin) {
+                processAdminLogic(messageText, chatId);
+                return;
+            }
+
             if (!isStarted) {
+
                 if (!messageText.equals("/start")) {
                     createAndSendMessage(chatId, "Присылай команду /start");
                 } else {
+                    isAdmin = false;
                     startBot(update);
                 }
             } else {
@@ -112,6 +143,20 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             getReviews(callbackData, chatId);
             startToProceedOrRepeatFacets(callbackData, chatId);
+        }
+    }
+
+    private void processAdminLogic(String messageText, long chatId) {
+        if (!isRegistered) {
+            if (adminService.loginAdmin(messageText)) {
+                isRegistered = true;
+                createAndSendMessage(chatId, "Введи новый ответ на отзыв. Замени имя покупетля символами %s.");
+            } else {
+                createAndSendMessage(chatId, "Пароль неверный. Попробуй еще раз");
+            }
+        } else {
+            adminService.addNewReviewToDB(messageText);
+            createAndSendMessage(chatId, "Отзыв записан. Пиши еще или вводи /start для входа как пользователь");
         }
     }
 
@@ -152,7 +197,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private void startToProceedOrRepeatFacets(String callbackData, Long chatId) {
         if (callbackData.equals(ButtonUtils.PROCESS_REVIEWS)) {
-
+            responseService.sendResponses(authInfo.getToken());
         } else if (callbackData.equals(ButtonUtils.REPEAT_FACETS)) {
             chooseReviewsFacet(chatId);
         }
